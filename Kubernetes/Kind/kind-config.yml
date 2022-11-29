@@ -12,8 +12,8 @@ networking:
   apiServerPort: 6443
 nodes:
 - role: worker
-- role: worker
-- role: worker
+#- role: worker
+#- role: worker
 - role: control-plane
   kubeadmConfigPatches:
   - |

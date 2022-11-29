@@ -1,0 +1,53 @@
+SHELL:=/bin/sh
+.PHONY: all
+
+TF_BIN ?= terraform
+
+help: ## this help
+	@awk 'BEGIN {FS = ":.*?## ";  printf "Usage:\n  make \033[36m<target> \033[0m\n\nTargets:\n"} /^[a-zA-Z0-9_-]+:.*?## / {gsub("\\\\n",sprintf("\n%22c",""), $$2);printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+init-reconfigure: ## run terraform init --reconfigure
+	$(TF_BIN) init --reconfigure
+
+init: ## run terraform init
+	$(TF_BIN) init
+
+plan: init ## run terraform plan
+	$(TF_BIN) plan -parallelism=100 -refresh=false
+
+apply: init ## run terraform apply
+	$(TF_BIN) apply -parallelism=100
+
+destroy: init ## run terraform destroy
+	$(TF_BIN) destroy
+
+output: refresh ## output terraform object [OBJECT]
+	$(TF_BIN) output '$(OBJECT)'
+
+refresh: ## refresh terraform state
+	$(TF_BIN) refresh
+
+state-list: ## output terraform state list
+	$(TF_BIN) state list
+
+fmt: ## run terraform fmt --write=true -diff (not recursive)
+	$(TF_BIN) fmt --write=true -diff
+
+docs: ## run terraform plan
+	terraform-docs markdown table --output-file README.md --output-mode inject .
+
+validate-terraform: ## validate terraform module
+	$(TF_BIN) validate
+
+security-code-analysis: ## run security code analysis with tfsec
+	tfsec .
+
+#tf-clean: ## clean terraform files
+#	rm -rvf .terraform terraform.tfstate *.backup
+
+lint: ## run tflint
+	$(TF_BIN) tflint --init
+	tflint
+
+pre-commit: ## run pre-commit run -a
+	pre-commit run -a
